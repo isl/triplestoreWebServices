@@ -8,8 +8,13 @@ import javax.ws.rs.QueryParam;
 import forth.ics.isl.blazegraph.*;
 import forth.ics.isl.utils.PropertiesManager;
 import forth.ics.isl.utils.ResponseStatus;
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.Reader;
+import java.nio.file.Files;
 
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DefaultValue;
@@ -21,6 +26,10 @@ import javax.ws.rs.core.Response.ResponseBuilder;
 import org.eclipse.rdf4j.rio.RDFFormat;
 import org.eclipse.rdf4j.rio.Rio;
 import org.glassfish.jersey.media.multipart.FormDataParam;
+import org.json.simple.JSONArray;
+import org.json.simple.JSONObject;
+import org.json.simple.parser.JSONParser;
+import org.json.simple.parser.ParseException;
 
 
 /**
@@ -39,26 +48,48 @@ public class TriplestoreWebServices {
                           @QueryParam("service-url") String serviceURL,
                           @HeaderParam("Content-Type") String contentType,
                           @QueryParam("namespace") String namespace,
-                          @DefaultValue("0") @QueryParam("timeout") int timeout) {
+                          @QueryParam("token") String token,
+                          //@QueryParam("username") String username,
+                          //@QueryParam("password") String password,
+                          @DefaultValue("0") @QueryParam("timeout") int timeout) throws IOException, ParseException {
         
-        BlazegraphManager manager = new BlazegraphManager();
+        //authorization code
+        String command = "curl services.apollonis-infrastructure.gr:8083/user/search/?username=resource_admin -H \"Authorization: Bearer " + token;
+        //String command = "curl ite_client:user@apollonisvm.imsi.athenarc.gr:8081/oauth/token -dgrant_type=password -dusername=" + username + " -dpassword=" + password;
+        Process process = Runtime.getRuntime().exec(command);
+        InputStream tokenStream = process.getInputStream();
         
-        if(serviceURL == null)
-            serviceURL = propertiesManager.getTripleStoreUrl();
+        BufferedReader input = new BufferedReader(new InputStreamReader(tokenStream), 1);
+        String inputLine;
         
-        if(namespace == null)
-            namespace = propertiesManager.getTripleStoreNamespace();
-      
-        manager.openConnectionToBlazegraph(serviceURL + "/namespace/" + namespace + "/sparql");
-        
-        ResponseStatus responseStatus = manager.query(queryString, contentType, timeout);
-        
-        manager.closeConnectionToBlazeGraph();
-        
-        // Adding Access-Control-Allow-Origin to the header in order to resolve the CORS issue between modern browsers and server
-        return Response.status(responseStatus.getStatus()).entity(responseStatus.getResponse()).header("Access-Control-Allow-Origin", "*").build();
+        while((inputLine = input.readLine()) != null) {
+          
+            if(!inputLine.contains("invalid_token") && !inputLine.contains("error") && inputLine.contains("id") && inputLine.contains("name")) {
+            //if(inputLine.contains("access_token") && !inputLine.contains("error")) {
+                
+                BlazegraphManager manager = new BlazegraphManager();
+
+                if(serviceURL == null)
+                    serviceURL = propertiesManager.getTripleStoreUrl();
+
+                if(namespace == null)
+                    namespace = propertiesManager.getTripleStoreNamespace();
+
+                manager.openConnectionToBlazegraph(serviceURL + "/namespace/" + namespace + "/sparql");
+
+                ResponseStatus responseStatus = manager.query(queryString, contentType, timeout);
+
+                manager.closeConnectionToBlazeGraph();
+
+                // Adding Access-Control-Allow-Origin to the header in order to resolve the CORS issue between modern browsers and server
+                return Response.status(responseStatus.getStatus()).entity(responseStatus.getResponse()).header("Access-Control-Allow-Origin", "*").build();
+            }
+               
+        }
+        return Response.status(404).entity("Authorization failed").header("Access-Control-Allow-Origin", "*").build();
     }
     
+
     
     @POST
     @Path("/import")
@@ -66,51 +97,84 @@ public class TriplestoreWebServices {
                                        @QueryParam("service-url") String serviceURL,
                                        @HeaderParam("Content-Type") String contentType,
                                        @QueryParam("namespace") String namespace,
-                                       @DefaultValue("") @QueryParam("graph") String graph) {
+                                       @QueryParam("username") String username,
+                                       @QueryParam("password") String password,
+                                       @DefaultValue("") @QueryParam("graph") String graph) throws IOException {
 
-        BlazegraphManager manager = new BlazegraphManager();
-
-        if(serviceURL == null)
-            serviceURL = propertiesManager.getTripleStoreUrl();
+        //authorization code
+        String command = "curl ite_client:user@apollonisvm.imsi.athenarc.gr:8081/oauth/token -dgrant_type=password -dusername=" + username + " -dpassword=" + password;
+        Process process = Runtime.getRuntime().exec(command);
+        InputStream tokenStream = process.getInputStream();
         
-        if(namespace == null)
-            namespace = propertiesManager.getTripleStoreNamespace();
-              
-        manager.openConnectionToBlazegraph(serviceURL + "/namespace/" + namespace + "/sparql");
+        BufferedReader input = new BufferedReader(new InputStreamReader(tokenStream), 1);
+        String inputLine;
         
-        RDFFormat format = Rio.getParserFormatForMIMEType(contentType).get();
-        
-        ResponseStatus responseStatus = manager.importFile(file, format, graph);
+        while((inputLine = input.readLine()) != null) {
+            
+            if(inputLine.contains("access_token") && !inputLine.contains("error")) {
+  
+                BlazegraphManager manager = new BlazegraphManager();
 
-        manager.closeConnectionToBlazeGraph();
+                if(serviceURL == null)
+                    serviceURL = propertiesManager.getTripleStoreUrl();
 
-        return Response.status(responseStatus.getStatus()).entity(responseStatus.getResponse()).header("Access-Control-Allow-Origin", "*").build();
+                if(namespace == null)
+                    namespace = propertiesManager.getTripleStoreNamespace();
+
+                manager.openConnectionToBlazegraph(serviceURL + "/namespace/" + namespace + "/sparql");
+
+                RDFFormat format = Rio.getParserFormatForMIMEType(contentType).get();
+
+                ResponseStatus responseStatus = manager.importFile(file, format, graph);
+
+                manager.closeConnectionToBlazeGraph();
+
+                return Response.status(responseStatus.getStatus()).entity(responseStatus.getResponse()).header("Access-Control-Allow-Origin", "*").build();
        // return Response.status(responseStatus.getStatus()).entity(responseStatus.getResponse()).build();
-    }
+            }
+        }
+        return Response.status(404).entity("Authorization failed").header("Access-Control-Allow-Origin", "*").build();
+    }    
     
     
     @POST
     @Path("/update")
     public Response update(@QueryParam("update") String updateMsg,
                            @QueryParam("namespace") String namespace,
-                           @QueryParam("service-url") String serviceURL) {
+                           @QueryParam("service-url") String serviceURL,
+                           @QueryParam("username") String username,
+                           @QueryParam("password") String password) throws IOException {
         
-        BlazegraphManager manager = new BlazegraphManager();
+        //authorization code
+        String command = "curl ite_client:user@apollonisvm.imsi.athenarc.gr:8081/oauth/token -dgrant_type=password -dusername=" + username + " -dpassword=" + password;
+        Process process = Runtime.getRuntime().exec(command);
+        InputStream tokenStream = process.getInputStream();
+        
+        BufferedReader input = new BufferedReader(new InputStreamReader(tokenStream), 1);
+        String inputLine;
+        
+        while((inputLine = input.readLine()) != null) {
+            
+            if(inputLine.contains("access_token") && !inputLine.contains("error")) {
+                BlazegraphManager manager = new BlazegraphManager();
 
-        if(serviceURL == null)
-            serviceURL = propertiesManager.getTripleStoreUrl();
-        
-        if(namespace == null)
-            namespace = propertiesManager.getTripleStoreNamespace();
-      
-        manager.openConnectionToBlazegraph(serviceURL + "/namespace/" + namespace + "/sparql");
-     
-        manager.updateQuery(updateMsg);
+                if(serviceURL == null)
+                    serviceURL = propertiesManager.getTripleStoreUrl();
 
-        manager.closeConnectionToBlazeGraph();
-        
-        return Response.status(200).entity("Successfully updated").header("Access-Control-Allow-Origin", "*").build();
-        //return Response.status(200).entity("Updated!!").build();
+                if(namespace == null)
+                    namespace = propertiesManager.getTripleStoreNamespace();
+
+                manager.openConnectionToBlazegraph(serviceURL + "/namespace/" + namespace + "/sparql");
+
+                manager.updateQuery(updateMsg);
+
+                manager.closeConnectionToBlazeGraph();
+
+                return Response.status(200).entity("Successfully updated").header("Access-Control-Allow-Origin", "*").build();
+                //return Response.status(200).entity("Updated!!").build();
+            }
+        }
+        return Response.status(404).entity("Authorization failed").header("Access-Control-Allow-Origin", "*").build();
     }
     
     
@@ -120,37 +184,52 @@ public class TriplestoreWebServices {
                                        @QueryParam("service-url") String serviceURL,
                                        @HeaderParam("Accept") String format,
                                        @QueryParam("namespace") String namespace,
-                                       @DefaultValue("") @QueryParam("graph") String graph) 
-    {
+                                       @QueryParam("username") String username,
+                                       @QueryParam("password") String password,
+                                       @DefaultValue("") @QueryParam("graph") String graph) throws IOException {
+        //authorization code
+        String command = "curl ite_client:user@apollonisvm.imsi.athenarc.gr:8081/oauth/token -dgrant_type=password -dusername=" + username + " -dpassword=" + password;
+        Process process = Runtime.getRuntime().exec(command);
+        InputStream tokenStream = process.getInputStream();
         
-        System.out.println("filename: " + filename + " namespace:" + namespace + " graph:" 
-                            + graph + " service-url:" + serviceURL + " accept:" + format);
-        BlazegraphManager manager = new BlazegraphManager();
-
-        if(serviceURL == null)
-            serviceURL = propertiesManager.getTripleStoreUrl();
+        BufferedReader input = new BufferedReader(new InputStreamReader(tokenStream), 1);
+        String inputLine;
         
-        if(namespace == null)
-            namespace = propertiesManager.getTripleStoreNamespace();
-      
-        manager.openConnectionToBlazegraph(serviceURL + "/namespace/" + namespace + "/sparql");
-        
-        RDFFormat rdfFormat = Rio.getParserFormatForMIMEType(format).get();
-         
-        ResponseStatus responseStatus = manager.exportFile(filename, namespace, graph, rdfFormat);
+        while((inputLine = input.readLine()) != null) {
     
-        manager.closeConnectionToBlazeGraph();
+            if(inputLine.contains("access_token") && !inputLine.contains("error")) {
         
-        if(responseStatus.getStatus() == 200) {
-            String filepath = "/opt/tomcat/apache-tomcat-8.0.53/bin/" + responseStatus.getResponse();
-            File file = new File(filepath);
-            ResponseBuilder response = Response.ok((Object) file);
-            response.header("Content-Disposition","attachment; filename=" + responseStatus.getResponse());
-            return response.build();
+                    System.out.println("filename: " + filename + " namespace:" + namespace + " graph:" 
+                                        + graph + " service-url:" + serviceURL + " accept:" + format);
+                    BlazegraphManager manager = new BlazegraphManager();
+
+                    if(serviceURL == null)
+                        serviceURL = propertiesManager.getTripleStoreUrl();
+
+                    if(namespace == null)
+                        namespace = propertiesManager.getTripleStoreNamespace();
+
+                    manager.openConnectionToBlazegraph(serviceURL + "/namespace/" + namespace + "/sparql");
+
+                    RDFFormat rdfFormat = Rio.getParserFormatForMIMEType(format).get();
+
+                    ResponseStatus responseStatus = manager.exportFile(filename, namespace, graph, rdfFormat);
+
+                    manager.closeConnectionToBlazeGraph();
+
+                    if(responseStatus.getStatus() == 200) {
+                        String filepath = "/opt/tomcat/apache-tomcat-8.0.53/bin/" + responseStatus.getResponse();
+                        File file = new File(filepath);
+                        ResponseBuilder response = Response.ok((Object) file);
+                        response.header("Content-Disposition","attachment; filename=" + responseStatus.getResponse());
+                        return response.build();
+                    }
+
+                    return Response.status(responseStatus.getStatus()).entity(responseStatus.getResponse()).header("Access-Control-Allow-Origin", "*").build();
+                    //return Response.status(responseStatus.getStatus()).entity(responseStatus.getResponse()).build();
+                }
         }
-        
-        return Response.status(responseStatus.getStatus()).entity(responseStatus.getResponse()).header("Access-Control-Allow-Origin", "*").build();
-        //return Response.status(responseStatus.getStatus()).entity(responseStatus.getResponse()).build();
+        return Response.status(404).entity("Authorization failed").header("Access-Control-Allow-Origin", "*").build();
     }  	
 }
 
