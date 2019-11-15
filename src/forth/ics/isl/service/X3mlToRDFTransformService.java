@@ -59,15 +59,17 @@ public class X3mlToRDFTransformService {
     								   @FormDataParam("x3mlFileUrl") List<String> x3mlFileUrlList,
     								   @FormDataParam("generatorPolicyFileUrl") String generatorPolicyFileUrl,
     								   @FormDataParam("transformContentType") String transformContentType,
-                                                                   @QueryParam("username") String username,
-                                                                   @QueryParam("password") String password) throws IOException {
+                                                                   @QueryParam("token") String token) throws IOException {
+                                                                   //@QueryParam("username") String username,
+                                                                  // @QueryParam("password") String password) throws IOException {
 		
 		JSONObject message = new JSONObject();
 		int status = 0;
 		boolean proceed = true;
 		
                 //authorization code
-                String command = "curl ite_client:user@apollonisvm.imsi.athenarc.gr:8081/oauth/token -dgrant_type=password -dusername=" + username + " -dpassword=" + password;
+                String command = "curl services.apollonis-infrastructure.gr:8083/user/search/?username=resource_admin -H \"Authorization: Bearer " + token;
+                //String command = "curl ite_client:user@apollonisvm.imsi.athenarc.gr:8081/oauth/token -dgrant_type=password -dusername=" + username + " -dpassword=" + password;
                 Process process = Runtime.getRuntime().exec(command);
                 InputStream tokenStream = process.getInputStream();
 
@@ -76,7 +78,8 @@ public class X3mlToRDFTransformService {
 
                 while((inputLine = input.readLine()) != null) {
 
-                    if(inputLine.contains("access_token") && !inputLine.contains("error")) {
+                    if(!inputLine.contains("invalid_token") && !inputLine.contains("error") && inputLine.contains("id") && inputLine.contains("name")) {
+                    //if(inputLine.contains("access_token") && !inputLine.contains("error")) {
                 
 
                                 try {
