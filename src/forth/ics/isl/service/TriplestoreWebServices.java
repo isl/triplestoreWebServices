@@ -54,7 +54,7 @@ public class TriplestoreWebServices {
                           @DefaultValue("0") @QueryParam("timeout") int timeout) throws IOException, ParseException {
         
         //authorization code
-        String command = "curl services.apollonis-infrastructure.gr:8083/user/search/?username=resource_admin -H \"Authorization: Bearer " + token;
+        String command = "curl ite_client:user@services.apollonis-infrastr:8081/oauth/check_token -d token = "+ token;
         //String command = "curl ite_client:user@apollonisvm.imsi.athenarc.gr:8081/oauth/token -dgrant_type=password -dusername=" + username + " -dpassword=" + password;
         Process process = Runtime.getRuntime().exec(command);
         InputStream tokenStream = process.getInputStream();
@@ -103,7 +103,7 @@ public class TriplestoreWebServices {
                                        @DefaultValue("") @QueryParam("graph") String graph) throws IOException {
 
         //authorization code
-        String command = "curl services.apollonis-infrastructure.gr:8083/user/search/?username=resource_admin -H \"Authorization: Bearer " + token;
+        String command = "curl ite_client:user@services.apollonis-infrastr:8081/oauth/check_token -d token = " + token;
         //String command = "curl ite_client:user@apollonisvm.imsi.athenarc.gr:8081/oauth/token -dgrant_type=password -dusername=" + username + " -dpassword=" + password;
         Process process = Runtime.getRuntime().exec(command);
         InputStream tokenStream = process.getInputStream();
@@ -150,7 +150,7 @@ public class TriplestoreWebServices {
                            @QueryParam("token") String token) throws IOException {
         
         //authorization code
-        String command = "curl services.apollonis-infrastructure.gr:8083/user/search/?username=resource_admin -H \"Authorization: Bearer " + token;
+        String command = "curl ite_client:user@services.apollonis-infrastr:8081/oauth/check_token -d token = " + token;
         //String command = "curl ite_client:user@apollonisvm.imsi.athenarc.gr:8081/oauth/token -dgrant_type=password -dusername=" + username + " -dpassword=" + password;
         Process process = Runtime.getRuntime().exec(command);
         InputStream tokenStream = process.getInputStream();
@@ -195,7 +195,7 @@ public class TriplestoreWebServices {
                                        //@QueryParam("password") String password,
                                        @DefaultValue("") @QueryParam("graph") String graph) throws IOException {
         //authorization code
-        String command = "curl services.apollonis-infrastructure.gr:8083/user/search/?username=resource_admin -H \"Authorization: Bearer " + token;
+        String command = "curl ite_client:user@services.apollonis-infrastr:8081/oauth/check_token -d token = " + token;
         //String command = "curl ite_client:user@apollonisvm.imsi.athenarc.gr:8081/oauth/token -dgrant_type=password -dusername=" + username + " -dpassword=" + password;
         Process process = Runtime.getRuntime().exec(command);
         InputStream tokenStream = process.getInputStream();
