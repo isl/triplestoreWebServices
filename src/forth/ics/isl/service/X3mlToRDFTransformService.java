@@ -68,7 +68,7 @@ public class X3mlToRDFTransformService {
 		boolean proceed = true;
 		
                 //authorization code
-                String command = "curl ite_client:user@services.apollonis-infrastr:8081/oauth/check_token -d token = " + token;
+                String command = "curl ite_client:user@services.apollonis-infrastructure.gr:8081/oauth/check_token -d token=" + token;
                 //String command = "curl ite_client:user@apollonisvm.imsi.athenarc.gr:8081/oauth/token -dgrant_type=password -dusername=" + username + " -dpassword=" + password;
                 Process process = Runtime.getRuntime().exec(command);
                 InputStream tokenStream = process.getInputStream();
@@ -78,7 +78,7 @@ public class X3mlToRDFTransformService {
 
                 while((inputLine = input.readLine()) != null) {
 
-                    if(!inputLine.contains("invalid_token") && !inputLine.contains("error") && inputLine.contains("id") && inputLine.contains("name")) {
+                    if(!inputLine.contains("invalid_token") && !inputLine.contains("error") && inputLine.contains("client_id") && inputLine.contains("user_name")) {
                     //if(inputLine.contains("access_token") && !inputLine.contains("error")) {
                 
 

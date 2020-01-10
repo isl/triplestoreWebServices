@@ -200,10 +200,10 @@ public class BlazegraphManager {
 
         con.begin();
         try {
-            ValueFactory factory = SimpleValueFactory.getInstance();
-            IRI graphIRI = factory.createIRI(graph);
-            
-            con.add(new File(file), graph, format, graphIRI);
+           // ValueFactory factory = SimpleValueFactory.getInstance();
+           // IRI graphIRI = factory.createIRI(graph); 
+           // con.add(new File(file), graph, format, graphIRI);
+            con.add(new File(file), graph, format);
             //con.add(new BufferedReader(new InputStreamReader(file, StandardCharsets.UTF_8)), graph, format, graphIRI);
             con.commit();
             responseStatus = new ResponseStatus(200, "File imported successfully");

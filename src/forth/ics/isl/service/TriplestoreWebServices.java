@@ -54,7 +54,7 @@ public class TriplestoreWebServices {
                           @DefaultValue("0") @QueryParam("timeout") int timeout) throws IOException, ParseException {
         
         //authorization code
-        String command = "curl ite_client:user@services.apollonis-infrastr:8081/oauth/check_token -d token = "+ token;
+        String command = "curl ite_client:user@services.apollonis-infrastructure.gr:8081/oauth/check_token -d token=" + token;
         //String command = "curl ite_client:user@apollonisvm.imsi.athenarc.gr:8081/oauth/token -dgrant_type=password -dusername=" + username + " -dpassword=" + password;
         Process process = Runtime.getRuntime().exec(command);
         InputStream tokenStream = process.getInputStream();
@@ -64,7 +64,7 @@ public class TriplestoreWebServices {
         
         while((inputLine = input.readLine()) != null) {
           
-            if(!inputLine.contains("invalid_token") && !inputLine.contains("error") && inputLine.contains("id") && inputLine.contains("name")) {
+            if(!inputLine.contains("invalid_token") && !inputLine.contains("error") && inputLine.contains("client_id") && inputLine.contains("user_name")) {
             //if(inputLine.contains("access_token") && !inputLine.contains("error")) {
                 
                 BlazegraphManager manager = new BlazegraphManager();
@@ -103,7 +103,7 @@ public class TriplestoreWebServices {
                                        @DefaultValue("") @QueryParam("graph") String graph) throws IOException {
 
         //authorization code
-        String command = "curl ite_client:user@services.apollonis-infrastr:8081/oauth/check_token -d token = " + token;
+        String command = "curl ite_client:user@services.apollonis-infrastructure.gr:8081/oauth/check_token -d token=" + token;
         //String command = "curl ite_client:user@apollonisvm.imsi.athenarc.gr:8081/oauth/token -dgrant_type=password -dusername=" + username + " -dpassword=" + password;
         Process process = Runtime.getRuntime().exec(command);
         InputStream tokenStream = process.getInputStream();
@@ -112,8 +112,8 @@ public class TriplestoreWebServices {
         String inputLine;
         
         while((inputLine = input.readLine()) != null) {
-            
-            if(!inputLine.contains("invalid_token") && !inputLine.contains("error") && inputLine.contains("id") && inputLine.contains("name")) {
+           
+            if(!inputLine.contains("invalid_token") && !inputLine.contains("error") && inputLine.contains("client_id") && inputLine.contains("user_name")) {
             //if(inputLine.contains("access_token") && !inputLine.contains("error")) {
   
                 BlazegraphManager manager = new BlazegraphManager();
@@ -150,7 +150,7 @@ public class TriplestoreWebServices {
                            @QueryParam("token") String token) throws IOException {
         
         //authorization code
-        String command = "curl ite_client:user@services.apollonis-infrastr:8081/oauth/check_token -d token = " + token;
+        String command = "curl ite_client:user@services.apollonis-infrastructure.gr:8081/oauth/check_token -d token=" + token;
         //String command = "curl ite_client:user@apollonisvm.imsi.athenarc.gr:8081/oauth/token -dgrant_type=password -dusername=" + username + " -dpassword=" + password;
         Process process = Runtime.getRuntime().exec(command);
         InputStream tokenStream = process.getInputStream();
@@ -160,7 +160,7 @@ public class TriplestoreWebServices {
         
         while((inputLine = input.readLine()) != null) {
             
-            if(!inputLine.contains("invalid_token") && !inputLine.contains("error") && inputLine.contains("id") && inputLine.contains("name")) {
+            if(!inputLine.contains("invalid_token") && !inputLine.contains("error") && inputLine.contains("client_id") && inputLine.contains("user_name")) {
             //if(inputLine.contains("access_token") && !inputLine.contains("error")) {
                 BlazegraphManager manager = new BlazegraphManager();
 
@@ -195,7 +195,7 @@ public class TriplestoreWebServices {
                                        //@QueryParam("password") String password,
                                        @DefaultValue("") @QueryParam("graph") String graph) throws IOException {
         //authorization code
-        String command = "curl ite_client:user@services.apollonis-infrastr:8081/oauth/check_token -d token = " + token;
+        String command = "curl ite_client:user@services.apollonis-infrastructure.gr:8081/oauth/check_token -d token=" + token;
         //String command = "curl ite_client:user@apollonisvm.imsi.athenarc.gr:8081/oauth/token -dgrant_type=password -dusername=" + username + " -dpassword=" + password;
         Process process = Runtime.getRuntime().exec(command);
         InputStream tokenStream = process.getInputStream();
@@ -205,7 +205,7 @@ public class TriplestoreWebServices {
         
         while((inputLine = input.readLine()) != null) {
     
-            if(!inputLine.contains("invalid_token") && !inputLine.contains("error") && inputLine.contains("id") && inputLine.contains("name")) {
+            if(!inputLine.contains("invalid_token") && !inputLine.contains("error") && inputLine.contains("client_id") && inputLine.contains("user_name")) {
             //if(inputLine.contains("access_token") && !inputLine.contains("error")) {
         
                     System.out.println("filename: " + filename + " namespace:" + namespace + " graph:" 
